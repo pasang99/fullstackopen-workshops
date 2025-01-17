@@ -1,0 +1,29 @@
+{
+  "env": {
+    "browser": true,
+    "es2021": true
+  },
+  "extends": [
+    "eslint:recommended",
+    "plugin:react/recommended",
+    "plugin:jsx-a11y/recommended"
+  ],
+  "parserOptions": {
+    "ecmaFeatures": {
+      "jsx": true
+    },
+    "ecmaVersion": 12,
+    "sourceType": "module"
+  },
+  "plugins": ["react", "jsx-a11y", "import"],
+  "rules": {
+    "react/react-in-jsx-scope": "off",  // Disable this rule
+    "react/jsx-uses-react": "off",      // Disable this rule for JSX files
+    "react/prop-types": "warn"          // Optional: Warn about missing prop validation (can be disabled if not needed)
+  },
+  "settings": {
+    "react": {
+      "version": "detect"  // Automatically detect React version
+    }
+  }
+}
