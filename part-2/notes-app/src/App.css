@@ -1,0 +1,23 @@
+.greenHeading {
+  color: green;
+  font-size: 3em;
+}
+
+.notification {
+  background-color: red;
+  color: white;
+  padding: 10px;
+  margin-bottom: 10px;
+  border-radius: 5px;
+}
+
+button {
+  padding: 5px 10px;
+  margin: 10px;
+}
+
+input, textarea {
+  padding: 8px;
+  margin: 5px;
+  width: 300px;
+}

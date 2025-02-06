@@ -1,68 +1,98 @@
-import { useEffect, useState } from "react";
-import axios from "axios";
+import { useState, useEffect } from "react";
+import Notes from "./components/Notes";
+import noteService from './services/notes';
+import Notification from "./components/Notification";
+import './App.css'; // Ensure your CSS file is imported
 
 const App = () => {
-  // State to track notes and showAll state
   const [notes, setNotes] = useState([]);
-  const [newNote, setNewNote] = useState({ title: '', content: '', isImportant: false });
+  const [newNote, setNewNote] = useState('');
   const [showAll, setShowAll] = useState(true);
+  const [notification, setNotification] = useState('');
 
   useEffect(() => {
-    axios.get("http://localhost:3001/notes")
-      .then(response => setNotes(response.data))
-      .catch(error => console.error("Error fetching notes:", error));
+    console.log('effect');
+    //1. get data from backend
+    let myAxios = noteService.getAll();
+    myAxios.then((result) => {
+      console.dir(result);
+      console.log('promise fulfilled');
+      setNotes(result);
+    }).catch((error) => {
+      console.log("error", error);
+    });
   }, []);
-  // Add new note to the notes array
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (newNote.title && newNote.content) {
-      setNotes([...notes, { ...newNote, id: notes.length + 1 }]);
-      setNewNote({ title: '', content: '', isImportant: false }); // Reset input
-    }
+
+  const notesToShow = notes.filter((note) => (showAll ? true : note.important));
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    let myNote = {
+      content: newNote,
+      important: Math.random() < 0.5
+    };
+    let postPromise = noteService.create(myNote);
+    postPromise.then((result) => {
+      console.log("created data return", result.data);
+      setNotes(notes.concat(result.data));
+      setNewNote('');
+    }).catch((error) => {
+      console.error("Error creating note:", error.message);
+      setNotification("Failed to create note");
+      setTimeout(() => setNotification(null), 5000);
+    });
   };
 
-  // Filter notes based on showAll state
-  const notesToShow = showAll ? notes : notes.filter(note => note.isImportant);
+  const handleChange = (event) => {
+    setNewNote(event.target.value);
+  };
+
+  const handleShowAll = () => {
+    setShowAll(!showAll);
+  };
+
+  const updateData = (id) => {
+    console.log('update note', id);
+    let currentNote = notes.find((note) => note.id === id);
+    console.log('current note', currentNote);
+    let updatedNote = { ...currentNote, important: !currentNote.important };
+    console.log('updated note', updatedNote);
+
+    //1. update the server
+    let putPromise = noteService.update(id, updatedNote);
+    putPromise.then((result) => {
+      console.log("updated data return", result);
+    }).catch((error) => {
+      console.log("error", error);
+      if (error.response.status === 404) {
+        setNotification(" sorry this note is fake");
+        setTimeout(() => {
+          setNotification(null);
+        }, 5000);
+        // alert('the note is already deleted');
+        setNotes(notes.filter((note) => note.id !== id));
+      }
+    });
+    console.log("return promise", putPromise);
+    //2. update the state
+    setNotes(notes.map((note) => note.id === updatedNote.id ? updatedNote : note));
+  };
 
   return (
     <div>
-      <h1>Notes</h1>
+      <h1 className="greenHeading">Notes</h1>
+      <Notification message={notification} />
+      <button onClick={handleShowAll}>
+        Show {showAll ? 'important' : 'all'}
+      </button>
+      <ul>
+        {notesToShow.map(value => {
+          return <Notes key={value.id} notes={value} updateNote={() => { updateData(value.id) }} />
+        })}
+      </ul>
       <form onSubmit={handleSubmit}>
-        <input
-          type="text"
-          placeholder="Title"
-          value={newNote.title}
-          onChange={(e) => setNewNote({ ...newNote, title: e.target.value })}
-        />
-        <textarea
-          placeholder="Content"
-          value={newNote.content}
-          onChange={(e) => setNewNote({ ...newNote, content: e.target.value })}
-        />
-        <label>
-          Important:
-          <input
-            type="checkbox"
-            checked={newNote.isImportant}
-            onChange={(e) => setNewNote({ ...newNote, isImportant: e.target.checked })}
-          />
-        </label>
+        <input type="text" value={newNote} onChange={handleChange} />
         <button type="submit">Add Note</button>
       </form>
-
-      <button onClick={() => setShowAll(!showAll)}>
-        {showAll ? 'Show Important Only' : 'Show All Notes'}
-      </button>
-
-      <ul>
-        {notesToShow.map((note) => (
-          <li key={note.id}>
-            <h2>{note.title}</h2>
-            <p>{note.content}</p>
-            {note.isImportant && <span>Important</span>}
-          </li>
-        ))}
-      </ul>
     </div>
   );
 };
