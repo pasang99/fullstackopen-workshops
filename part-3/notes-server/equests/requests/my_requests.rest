@@ -1,0 +1,11 @@
+
+### Delete a note by ID (Example: ID 1)
+DELETE http://localhost:3001/api/notes/1
+### Create a new note
+POST http://localhost:3001/api/notes
+Content-Type: application/json
+
+{
+  "content": "Express is awesome!",
+  "important": true
+}
